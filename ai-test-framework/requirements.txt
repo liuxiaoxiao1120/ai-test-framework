@@ -1,0 +1,6 @@
+# Web 自动化测试框架依赖。
+pytest
+playwright
+pytest-playwright
+allure-pytest
+PyYAML

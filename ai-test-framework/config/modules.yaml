@@ -1,0 +1,5 @@
+# 业务模块菜单统一配置，新增模块时在此补充菜单名称。
+road:
+  name: "农村公路"
+  menus:
+    science_decision: "科学决策"

@@ -1,0 +1,10 @@
+# 科学决策模块测试数据，可按实际业务字段继续补充。
+search_cases:
+  - name: "默认条件查询"
+    keyword: ""
+  - name: "道路关键字查询"
+    keyword: "道路"
+
+# 首版仅校验按钮可用，避免自动下载大量文件。
+export:
+  click_button: false

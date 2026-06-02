@@ -1,0 +1,14 @@
+# Python 缓存与本地虚拟环境。
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# 测试运行生成文件，仅保留目录占位文件。
+reports/*
+!reports/.gitkeep
+screenshots/*
+!screenshots/.gitkeep
+logs/*
+!logs/.gitkeep
+.DS_Store
