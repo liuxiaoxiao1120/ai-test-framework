@@ -10,7 +10,7 @@
     <header class="topbar">
       <div>
         <h1>自动化测试平台</h1>
-        <p>浙江省公路监测监管系统接口与页面用例</p>
+        <p>浙江省公路监测监管系统接口自动化用例</p>
       </div>
       <div class="status-pill" id="saveStatus">未保存</div>
     </header>
@@ -28,7 +28,15 @@
             <input name="base_url" autocomplete="off" />
           </label>
           <label>
-            <span>登录地址</span>
+            <span>接口基础地址</span>
+            <input name="api_base_url" autocomplete="off" />
+          </label>
+          <label>
+            <span>接口登录路径</span>
+            <input name="api_login_path" autocomplete="off" />
+          </label>
+          <label>
+            <span>页面登录地址</span>
             <input name="login_path" autocomplete="off" />
           </label>
           <label>
@@ -58,6 +66,10 @@
             <span>token key</span>
             <input name="token_key" autocomplete="off" />
           </label>
+          <label class="wide inline-field">
+            <input name="use_page_login" type="checkbox" />
+            <span>执行用例前使用页面登录获取 token</span>
+          </label>
           <label class="wide">
             <span>用例路径</span>
             <input name="case_path" autocomplete="off" />
@@ -66,7 +78,7 @@
 
         <div class="actions">
           <button id="saveButton" type="button">保存配置</button>
-          <button id="loginButton" type="button">测试登录</button>
+          <button id="loginButton" type="button">测试页面登录</button>
           <button id="runButton" type="button" class="primary">执行用例</button>
         </div>
       </section>

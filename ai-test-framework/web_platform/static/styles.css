@@ -103,6 +103,13 @@ label.wide {
   grid-column: 1 / -1;
 }
 
+.inline-field {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 input,
 select {
   width: 100%;
@@ -114,6 +121,12 @@ select {
   background: #ffffff;
   font-size: 14px;
   outline: none;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  min-height: 16px;
+  padding: 0;
 }
 
 input:focus,

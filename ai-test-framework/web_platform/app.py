@@ -17,9 +17,12 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 RUNTIME_DIR = Path(__file__).resolve().parent / "runtime"
 CONFIG_FILE = RUNTIME_DIR / "config.json"
+LEGACY_DEFAULT_CASE_PATH = "testcases/road/test_route_info.py"
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "base_url": "http://10.6.20.233:8891",
+    "api_base_url": "",
+    "api_login_path": "",
     "login_path": "/#/Login",
     "username": "刘晓潇",
     "password": "",
@@ -27,7 +30,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "password_field": "password",
     "token_storage": "localStorage",
     "token_key": "access_token",
-    "case_path": "testcases/road/test_route_info.py",
+    "use_page_login": False,
+    "case_path": "testcases/api",
 }
 
 
@@ -73,7 +77,10 @@ def load_config() -> dict[str, Any]:
 
     with CONFIG_FILE.open("r", encoding="utf-8") as file:
         saved_config = json.load(file)
-    return {**DEFAULT_CONFIG, **saved_config}
+    config = {**DEFAULT_CONFIG, **saved_config}
+    if config.get("case_path") == LEGACY_DEFAULT_CASE_PATH:
+        config["case_path"] = DEFAULT_CONFIG["case_path"]
+    return config
 
 
 def save_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -154,7 +161,7 @@ def test_login(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_pytest(config: dict[str, Any]) -> dict[str, Any]:
-    """Run the selected pytest case with platform-provided login config."""
+    """Run the selected pytest case with platform-provided API config."""
     case_path = str(config.get("case_path", DEFAULT_CONFIG["case_path"]))
     target = ROOT_DIR / case_path
     if not target.exists():
@@ -166,6 +173,12 @@ def run_pytest(config: dict[str, Any]) -> dict[str, Any]:
 
     env = os.environ.copy()
     env["BASE_URL"] = str(config.get("base_url", DEFAULT_CONFIG["base_url"]))
+    api_base_url = str(config.get("api_base_url") or "")
+    api_login_path = str(config.get("api_login_path") or "")
+    if api_base_url:
+        env["API_BASE_URL"] = api_base_url
+    if api_login_path:
+        env["API_LOGIN_PATH"] = api_login_path
     env["LOGIN_USERNAME"] = str(config.get("username", ""))
     env["LOGIN_PASSWORD"] = str(config.get("password", ""))
     env["AUTH_STORAGE"] = str(
@@ -173,7 +186,8 @@ def run_pytest(config: dict[str, Any]) -> dict[str, Any]:
     )
     env["AUTH_STORAGE_KEY"] = str(config.get("token_key", DEFAULT_CONFIG["token_key"]))
 
-    if not env.get("ACCESS_TOKEN"):
+    use_page_login = config.get("use_page_login") in {True, "true", "on", "1", "yes"}
+    if use_page_login and not env.get("ACCESS_TOKEN"):
         login_result = test_login(config)
         if not login_result.get("ok"):
             return {

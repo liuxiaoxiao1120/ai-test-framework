@@ -13,14 +13,20 @@ const buttons = {
 };
 
 function getConfig() {
-  return Object.fromEntries(new FormData(form).entries());
+  const config = Object.fromEntries(new FormData(form).entries());
+  config.use_page_login = Boolean(form.elements.use_page_login?.checked);
+  return config;
 }
 
 function setConfig(config) {
   for (const [key, value] of Object.entries(config)) {
     const field = form.elements[key];
     if (field) {
-      field.value = value ?? "";
+      if (field.type === "checkbox") {
+        field.checked = Boolean(value);
+      } else {
+        field.value = value ?? "";
+      }
     }
   }
 }
@@ -79,21 +85,21 @@ async function saveConfig() {
 
 async function checkLogin() {
   setBusy(true);
-  setResult({ action: "测试登录", state: "执行中", text: "正在登录..." });
+  setResult({ action: "测试页面登录", state: "执行中", text: "正在登录..." });
   try {
     const data = await requestJson("/api/login/check", {
       method: "POST",
       body: JSON.stringify(getConfig()),
     });
     setResult({
-      action: "测试登录",
+      action: "测试页面登录",
       state: "完成",
       ok: data.ok,
       code: "-",
       text: JSON.stringify(data, null, 2),
     });
   } catch (error) {
-    setResult({ action: "测试登录", state: "失败", ok: false, text: error.message });
+    setResult({ action: "测试页面登录", state: "失败", ok: false, text: error.message });
   } finally {
     setBusy(false);
   }

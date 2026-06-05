@@ -1,4 +1,4 @@
-"""Pytest 全局配置：统一管理环境、浏览器、页面和失败截图。"""
+"""Pytest 全局配置：统一管理环境、接口客户端和可选浏览器能力。"""
 
 import json
 import os
@@ -10,11 +10,14 @@ from typing import Any, Generator, Optional
 
 import allure
 import pytest
-from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_playwright
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from common.api_client import ApiClient
 from common.yaml_util import YamlUtil
+
+try:
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+except ImportError:
+    PlaywrightTimeoutError = TimeoutError
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -94,7 +97,7 @@ def _extract_json_path(data: Any, json_path: str) -> Optional[str]:
     return str(current)
 
 
-def _first_visible(page: Page, selectors: list[str], timeout: int) -> Optional[Any]:
+def _first_visible(page: Any, selectors: list[str], timeout: int) -> Optional[Any]:
     """返回第一个可见元素，用于兼容不同登录页控件写法。"""
     for selector in selectors:
         locator = page.locator(selector).first
@@ -106,7 +109,7 @@ def _first_visible(page: Page, selectors: list[str], timeout: int) -> Optional[A
     return None
 
 
-def _login_by_account(context: BrowserContext, env_config: dict[str, Any]) -> None:
+def _login_by_account(context: Any, env_config: dict[str, Any]) -> None:
     """使用登录页账号密码完成鉴权；密码允许为空。"""
     auth_config = env_config.get("auth", {})
     login_config = auth_config.get("login", {})
@@ -287,17 +290,22 @@ def auth_api_client(
 
 
 @pytest.fixture(scope="session")
-def playwright_instance() -> Generator[Playwright, None, None]:
-    """启动并回收 Playwright 运行实例。"""
+def playwright_instance() -> Generator[Any, None, None]:
+    """启动并回收 Playwright 运行实例；仅 UI 或接口抓取场景使用。"""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        pytest.skip("未安装 playwright，跳过可选浏览器/接口抓取用例")
+
     with sync_playwright() as playwright:
         yield playwright
 
 
 @pytest.fixture(scope="session")
 def browser(
-    playwright_instance: Playwright, env_config: dict[str, Any]
-) -> Generator[Browser, None, None]:
-    """按环境配置启动浏览器。"""
+    playwright_instance: Any, env_config: dict[str, Any]
+) -> Generator[Any, None, None]:
+    """按环境配置启动浏览器；不属于接口测试主执行链路。"""
     browser_name = env_config.get("browser", "chromium")
     browser_type = getattr(playwright_instance, browser_name, None)
     if browser_type is None:
@@ -313,8 +321,8 @@ def browser(
 
 @pytest.fixture()
 def browser_context(
-    browser: Browser, env_config: dict[str, Any], access_token: Optional[str]
-) -> Generator[BrowserContext, None, None]:
+    browser: Any, env_config: dict[str, Any], access_token: Optional[str]
+) -> Generator[Any, None, None]:
     """创建浏览器上下文，并完成令牌注入或登录页鉴权。"""
     viewport = env_config.get("viewport", {"width": 1440, "height": 900})
     context = browser.new_context(viewport=viewport)
@@ -344,10 +352,10 @@ def browser_context(
 @pytest.fixture()
 def page(
     request: pytest.FixtureRequest,
-    browser_context: BrowserContext,
+    browser_context: Any,
     env_config: dict[str, Any],
-) -> Generator[Page, None, None]:
-    """为每条用例创建独立页面，避免用例状态相互污染。"""
+) -> Generator[Any, None, None]:
+    """为可选 UI/抓取用例创建独立页面，避免用例状态相互污染。"""
     current_page = browser_context.new_page()
     timeout = int(env_config.get("timeout", 10000))
     current_page.set_default_timeout(timeout)
