@@ -1,4 +1,4 @@
-"""YAML 驱动的接口自动化用例入口。"""
+"""YAML/JSON 驱动的接口自动化用例入口。"""
 
 from __future__ import annotations
 
@@ -9,58 +9,53 @@ from typing import Any
 import allure
 import pytest
 
-from common.api_case_runner import ApiCaseRunner
-from common.yaml_util import YamlUtil
+from core.context import CaseContext
+from core.loader import CaseLoader
+from core.runner import CaseRunner
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CASE_DIR = PROJECT_ROOT / "data" / "api"
+DEFAULT_CASE_DIR = PROJECT_ROOT / "cases"
 
 
-def _case_files() -> list[Path]:
-    configured = os.getenv("API_CASE_PATH")
-    if configured:
-        path = PROJECT_ROOT / configured
-        if path.is_file():
-            return [path]
-        return sorted(path.rglob("*.yaml"))
-    return sorted(DEFAULT_CASE_DIR.rglob("*.yaml"))
+def _load_cases() -> list[Any]:
+    loader = CaseLoader(DEFAULT_CASE_DIR)
+    target = os.getenv("API_CASE_PATH")
+    cases = loader.load_cases(target)
+    if not cases:
+        return [
+            pytest.param(
+                {
+                    "name": "未发现已启用接口用例",
+                    "_suite": "接口自动化",
+                    "_source": DEFAULT_CASE_DIR,
+                },
+                marks=pytest.mark.skip(reason="未发现已启用接口用例"),
+                id="no_enabled_cases",
+            )
+        ]
+    return [
+        pytest.param(case, id=str(case.get("id") or case.get("name")))
+        for case in cases
+    ]
 
 
-def _load_yaml_cases() -> list[Any]:
-    params: list[Any] = []
-    for file_path in _case_files():
-        suite = YamlUtil.load_yaml(file_path)
-        defaults = suite.get("defaults", {})
-        for index, case in enumerate(suite.get("cases", []), start=1):
-            if not case.get("enabled", True):
-                continue
-            case_id = str(case.get("id") or case.get("name") or f"case_{index}")
-            params.append(pytest.param(file_path, suite, defaults, case, id=case_id))
-    return params
+@pytest.fixture(scope="session")
+def api_context() -> CaseContext:
+    """跨接口用例共享提取出的变量。"""
+    return CaseContext()
 
 
-@pytest.mark.parametrize(
-    "source_path,suite,defaults,case",
-    _load_yaml_cases(),
-)
+@pytest.mark.parametrize("case", _load_cases())
 def test_api_yaml_case(
-    source_path: Path,
-    suite: dict[str, Any],
-    defaults: dict[str, Any],
     case: dict[str, Any],
     api_client,
-    request: pytest.FixtureRequest,
+    api_context: CaseContext,
 ) -> None:
-    """读取 YAML 用例并通过 Requests 执行接口测试。"""
-    if case.get("auth", defaults.get("auth", False)):
-        auth_api_client = request.getfixturevalue("auth_api_client")
-    else:
-        auth_api_client = None
-
+    """读取 YAML/JSON 用例并通过 Requests 执行接口测试。"""
     allure.dynamic.epic("接口自动化")
-    allure.dynamic.feature(str(suite.get("suite") or source_path.stem))
-    allure.dynamic.title(str(case.get("name") or case.get("id")))
+    allure.dynamic.feature(str(case.get("_suite") or "接口用例"))
+    allure.dynamic.title(str(case.get("name")))
 
-    runner = ApiCaseRunner(api_client=api_client, auth_api_client=auth_api_client)
-    runner.run_case(case=case, defaults=defaults, source_path=source_path)
+    runner = CaseRunner(client=api_client, context=api_context)
+    runner.run(case)

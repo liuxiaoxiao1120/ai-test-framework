@@ -23,6 +23,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "base_url": "http://10.6.20.233:8891",
     "api_base_url": "",
     "api_login_path": "",
+    "api_case_path": "cases",
     "login_path": "/#/Login",
     "username": "刘晓潇",
     "password": "",
@@ -80,6 +81,8 @@ def load_config() -> dict[str, Any]:
     config = {**DEFAULT_CONFIG, **saved_config}
     if config.get("case_path") == LEGACY_DEFAULT_CASE_PATH:
         config["case_path"] = DEFAULT_CONFIG["case_path"]
+    if not config.get("api_case_path"):
+        config["api_case_path"] = DEFAULT_CONFIG["api_case_path"]
     return config
 
 
@@ -105,7 +108,7 @@ def test_login(config: dict[str, Any]) -> dict[str, Any]:
     except ImportError:
         return {
             "ok": False,
-            "message": "当前 Python 环境未安装 playwright，请先安装 requirements.txt",
+            "message": "当前 Python 环境未安装 playwright，请先安装 requirements-capture.txt",
         }
 
     login_url = build_url(config["base_url"], config["login_path"])
@@ -170,9 +173,18 @@ def run_pytest(config: dict[str, Any]) -> dict[str, Any]:
             "return_code": 2,
             "output": f"用例文件不存在: {target}",
         }
+    api_case_path = str(config.get("api_case_path") or DEFAULT_CONFIG["api_case_path"])
+    api_case_target = ROOT_DIR / api_case_path
+    if not api_case_target.exists():
+        return {
+            "ok": False,
+            "return_code": 2,
+            "output": f"YAML 用例路径不存在: {api_case_target}",
+        }
 
     env = os.environ.copy()
     env["BASE_URL"] = str(config.get("base_url", DEFAULT_CONFIG["base_url"]))
+    env["API_CASE_PATH"] = api_case_path
     api_base_url = str(config.get("api_base_url") or "")
     api_login_path = str(config.get("api_login_path") or "")
     if api_base_url:

@@ -33,10 +33,7 @@ def build_case(response: Any, index: int) -> dict[str, Any]:
     method = request.method.upper()
     content_type = response.headers.get("content-type", "")
 
-    request_block: dict[str, Any] = {
-        "method": method,
-        "path": parsed_url.path or "/",
-    }
+    request_block: dict[str, Any] = {"method": method, "url": parsed_url.path or "/"}
     params = parse_params(parsed_url.query)
     if params:
         request_block["params"] = params
@@ -48,29 +45,16 @@ def build_case(response: Any, index: int) -> dict[str, Any]:
     if post_data:
         request_block["json"] = post_data
 
-    assertions = [
-        {
-            "type": "status_code",
-            "expected": response.status,
-            "message": "接口状态码应符合抓取结果",
-        }
-    ]
+    assert_block: dict[str, Any] = {"status_code": response.status}
     if "json" in content_type.lower():
-        assertions.append(
-            {
-                "type": "header_contains",
-                "name": "Content-Type",
-                "expected": "application/json",
-                "message": "响应应为 JSON",
-            }
-        )
+        assert_block["jsonpath"] = {}
 
     return {
         "id": normalize_case_id(method, parsed_url.path, index),
         "name": f"{method} {parsed_url.path or '/'}",
         "enabled": False,
         "request": request_block,
-        "assertions": assertions,
+        "assert": assert_block,
     }
 
 
@@ -131,7 +115,7 @@ def main() -> None:
     parser.add_argument(
         "-o",
         "--output",
-        default="data/api/captured_api_cases.yaml",
+        default="cases/captured/api_cases.yaml",
         help="输出 YAML 文件路径",
     )
     parser.add_argument("--suite", default="页面抓取接口", help="YAML suite 名称")

@@ -1,7 +1,5 @@
-# 接口自动化核心依赖；Playwright 仅用于可选接口抓取/UI 辅助。
+# 接口自动化核心依赖。
 pytest
-playwright
-pytest-playwright
 allure-pytest
 PyYAML
 requests

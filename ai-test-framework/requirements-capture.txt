@@ -1,0 +1,4 @@
+# 可选依赖：未来用于页面接口捕获和 AI 生成用例。
+-r requirements.txt
+playwright
+pytest-playwright

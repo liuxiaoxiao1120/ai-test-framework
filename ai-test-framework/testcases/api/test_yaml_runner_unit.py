@@ -1,8 +1,9 @@
-"""接口 YAML 执行器的本地单元测试。"""
+"""接口 core 执行器的本地单元测试。"""
 
 from __future__ import annotations
 
-from common.api_case_runner import ApiCaseRunner
+from core.context import CaseContext
+from core.runner import CaseRunner
 
 
 class FakeElapsed:
@@ -11,6 +12,7 @@ class FakeElapsed:
 
 
 class FakeRequest:
+    method = "GET"
     url = "http://example.test/api/health"
     headers = {"Content-Type": "application/json"}
     body = None
@@ -28,30 +30,27 @@ class FakeResponse:
 
 
 class FakeClient:
-    def request(self, method: str, path: str, **kwargs):
+    def request(self, method: str, url: str, **kwargs):
         assert method == "GET"
-        assert path == "/api/health"
+        assert url == "/api/health"
         assert kwargs["params"] == {"id": "R001"}
         return FakeResponse()
 
 
-def test_api_case_runner_supports_variables_extract_and_assertions() -> None:
-    runner = ApiCaseRunner(FakeClient(), variables={"route_id": "R001"})
+def test_core_runner_supports_variables_extract_and_assertions() -> None:
+    context = CaseContext({"route_id": "R001"})
+    runner = CaseRunner(FakeClient(), context=context)
     case = {
         "name": "健康检查",
         "request": {
             "method": "GET",
-            "path": "/api/health",
-            "params": {"id": "{{ route_id }}"},
+            "url": "/api/health",
+            "params": {"id": "${route_id}"},
         },
-        "extract": {"response_id": "json:data.id"},
-        "assertions": [
-            {"type": "status_code", "expected": 200, "message": "状态码应为 200"},
-            {"type": "json_path_equal", "path": "code", "expected": 0},
-            {"type": "json_path_exists", "path": "data.id"},
-        ],
+        "extract": {"response_id": "$.data.id"},
+        "assert": {"status_code": 200, "jsonpath": {"$.code": 0}},
     }
 
-    runner.run_case(case)
+    runner.run(case)
 
-    assert runner.variables["response_id"] == "R001"
+    assert context.get("response_id") == "R001"

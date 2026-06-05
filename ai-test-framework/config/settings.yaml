@@ -1,0 +1,5 @@
+# 框架级配置。后续平台化时可继续扩展为数据库、任务队列、报告归档等配置。
+case_dir: cases
+report_dir: reports/allure-results
+log_dir: logs
+default_timeout: 10000
