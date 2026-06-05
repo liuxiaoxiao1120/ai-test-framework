@@ -3,3 +3,9 @@ road:
   name: "农村公路"
   menus:
     science_decision: "科学决策"
+    route_info:
+      - "农村公路"
+      - "科学决策"
+      - "数据管理"
+      - "静态数据"
+      - "路线信息"

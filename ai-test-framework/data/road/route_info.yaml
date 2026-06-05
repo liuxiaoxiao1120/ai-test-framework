@@ -1,0 +1,15 @@
+# 路线信息模块测试数据。
+search_cases:
+  - name: "默认条件查询"
+    year: ""
+    keyword: ""
+  - name: "路线编号查询"
+    year: ""
+    keyword: "C001330111"
+
+api_capture:
+  # 接口地址明确后可改为 true，并在 url_keywords 中补充稳定关键字。
+  required: false
+  url_keywords:
+    - "route"
+    - "road"

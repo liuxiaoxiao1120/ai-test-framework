@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>自动化测试平台</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>自动化测试平台</h1>
+        <p>浙江省公路监测监管系统接口与页面用例</p>
+      </div>
+      <div class="status-pill" id="saveStatus">未保存</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel config-panel">
+        <div class="section-title">
+          <h2>运行配置</h2>
+          <span>test</span>
+        </div>
+
+        <form id="configForm" class="form-grid">
+          <label>
+            <span>被测系统地址</span>
+            <input name="base_url" autocomplete="off" />
+          </label>
+          <label>
+            <span>登录地址</span>
+            <input name="login_path" autocomplete="off" />
+          </label>
+          <label>
+            <span>账号字段名</span>
+            <input name="username_field" autocomplete="off" />
+          </label>
+          <label>
+            <span>密码字段名</span>
+            <input name="password_field" autocomplete="off" />
+          </label>
+          <label>
+            <span>账号</span>
+            <input name="username" autocomplete="off" />
+          </label>
+          <label>
+            <span>密码</span>
+            <input name="password" type="password" autocomplete="off" />
+          </label>
+          <label>
+            <span>token 存储</span>
+            <select name="token_storage">
+              <option value="localStorage">localStorage</option>
+              <option value="sessionStorage">sessionStorage</option>
+            </select>
+          </label>
+          <label>
+            <span>token key</span>
+            <input name="token_key" autocomplete="off" />
+          </label>
+          <label class="wide">
+            <span>用例路径</span>
+            <input name="case_path" autocomplete="off" />
+          </label>
+        </form>
+
+        <div class="actions">
+          <button id="saveButton" type="button">保存配置</button>
+          <button id="loginButton" type="button">测试登录</button>
+          <button id="runButton" type="button" class="primary">执行用例</button>
+        </div>
+      </section>
+
+      <section class="panel result-panel">
+        <div class="section-title">
+          <h2>执行结果</h2>
+          <span id="runState">空闲</span>
+        </div>
+        <div class="metrics">
+          <div>
+            <span>最近动作</span>
+            <strong id="lastAction">-</strong>
+          </div>
+          <div>
+            <span>返回码</span>
+            <strong id="returnCode">-</strong>
+          </div>
+          <div>
+            <span>结果</span>
+            <strong id="resultText">-</strong>
+          </div>
+        </div>
+        <pre id="output">等待执行...</pre>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

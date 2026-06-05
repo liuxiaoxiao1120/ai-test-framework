@@ -11,4 +11,8 @@ screenshots/*
 !screenshots/.gitkeep
 logs/*
 !logs/.gitkeep
+
+# 测试平台本地配置可能包含账号、密码或 token。
+web_platform/runtime/*
+!web_platform/runtime/.gitkeep
 .DS_Store

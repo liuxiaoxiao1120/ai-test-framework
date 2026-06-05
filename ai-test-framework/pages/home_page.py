@@ -1,5 +1,7 @@
 """系统首页页面对象。"""
 
+from collections.abc import Sequence
+
 import allure
 from playwright.sync_api import Locator, Page
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -39,6 +41,11 @@ class HomePage(BasePage):
     @allure.step("进入业务菜单：{parent_menu} -> {child_menu}")
     def goto_module(self, parent_menu: str, child_menu: str) -> None:
         """按菜单文本进入指定业务模块。"""
-        self.click(self._visible_text(parent_menu))
-        self.click(self._visible_text(child_menu))
+        self.goto_menu_path([parent_menu, child_menu])
+
+    @allure.step("进入多级业务菜单：{menu_path}")
+    def goto_menu_path(self, menu_path: Sequence[str]) -> None:
+        """按菜单文本顺序进入多级业务模块。"""
+        for menu in menu_path:
+            self.click(self._visible_text(menu))
         self.wait_for_load()

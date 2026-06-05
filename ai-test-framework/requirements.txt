@@ -4,3 +4,4 @@ playwright
 pytest-playwright
 allure-pytest
 PyYAML
+requests
